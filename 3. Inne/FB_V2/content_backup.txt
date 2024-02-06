@@ -1,0 +1,184 @@
+injectCSS("styles.css");
+chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+  const selectedText = message.text;
+  const analysisResults = await analyzeText(selectedText);
+  createAndDisplayPopup(analysisResults);
+});
+
+  async function analyzeText(selectedText) {
+  const messages = [
+    {
+      role: "user",
+      content: `Expert fallacies. Analyze text, identify each and every fallacy. Format:
+        type: x
+        description: foo
+
+        type: y
+        description: bar. Analyze: ${selectedText}`,
+    },
+  ];
+
+  const rawResponse = await new Promise((resolve, reject) => {
+    chrome.storage.local.get("apiKey", async ({ apiKey }) => {
+      if (!apiKey) {
+        alert("Please set your OpenAI API key in the extension settings.");
+        return reject("API key not set.");
+      }
+
+      try {
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-3.5-turbo",
+            messages: messages,
+            temperature: 0.7,
+          }),
+        });
+
+        const data = await response.json();
+          console.log("API response:", data); // Add this line to log the API response
+          if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+            resolve(data.choices[0].message.content.trim());
+          } else {
+            reject("No results.");
+          }
+
+      } catch (error) {
+        console.error("Error:", error);
+        reject(error);
+      }
+    });
+  });
+  console.log('Raw response:', rawResponse);
+  let parsedResults = [];
+  let lines = rawResponse.trim().split('\n').filter(line => line.trim()      !== '');
+  for (let i = 0; i < lines.length; i += 2) {
+  let typeLine = lines[i].split(':');
+  let descriptionLine = lines[i + 1].split(':');
+  let type = typeLine[1].trim();
+  let description = descriptionLine[1].trim();
+  parsedResults.push({ type, description });
+}
+
+  
+  console.log("Parsed results:", parsedResults);
+
+  return parsedResults
+}
+
+  
+const parentContainerMap = new Map();
+
+function createAndDisplayPopup(parsedResults) {
+  const selectedRange = window.getSelection().getRangeAt(0);
+  const parentElement = selectedRange.startContainer.parentElement;
+
+  const rect = parentElement.getBoundingClientRect();
+  const container = document.createElement('div');
+  container.className = 'response-container';
+  container.style.width = `${rect.width}px`;
+  container.style.zIndex = 10000;
+
+  const closeButton = document.createElement('button');
+  closeButton.innerHTML = 'X';
+  closeButton.style.position = 'absolute';
+  closeButton.style.top = '0';
+  closeButton.style.right = '0';
+  closeButton.style.background = 'none';
+  closeButton.style.border = 'none';
+  closeButton.style.cursor = 'pointer';
+  closeButton.onclick = () => {
+    container.remove();
+  };
+  container.appendChild(closeButton);
+
+  parsedResults.forEach(result => {
+    const item = document.createElement('div');
+    item.innerHTML = `${result.type}: ${result.description}`;
+    container.appendChild(item);
+  });
+
+  let lastContainer;
+  if (parentContainerMap.has(parentElement)) {
+    const containers = parentContainerMap.get(parentElement);
+    lastContainer = containers[containers.length - 1];
+    lastContainer.insertAdjacentElement('afterend', container);
+    containers.push(container);
+  } else {
+    parentElement.insertAdjacentElement('afterend', container);
+    parentContainerMap.set(parentElement, [container]);
+  }
+}
+
+  
+  function makeDraggable(element) {
+    let posX = 0,
+    posY = 0,
+    dragX = 0,
+    dragY = 0;
+  element.onmousedown = dragMouseDown;
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    dragX = e.clientX;
+    dragY = e.clientY;
+    document.onmouseup = closeDrag;
+    document.onmousemove = drag;
+  }
+
+  function drag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    posX = dragX - e.clientX;
+    posY = dragY - e.clientY;
+    dragX = e.clientX;
+    dragY = e.clientY;
+    element.style.top = element.offsetTop - posY + "px";
+    element.style.left = element.offsetLeft - posX + "px";
+  }
+
+  function closeDrag() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+  }
+  
+  function makeResizable(element) {
+    const resizeHandle = document.createElement("div");
+    resizeHandle.style.width = "10px";
+    resizeHandle.style.height = "10px";
+    resizeHandle.style.background = "gray";
+    resizeHandle.style.position = "absolute";
+    resizeHandle.style.right = "0";
+    resizeHandle.style.bottom = "0";
+    resizeHandle.style.cursor = "nwse-resize";
+    element.appendChild(resizeHandle);
+  
+    resizeHandle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      document.documentElement.addEventListener("mousemove", resizeElement);
+      document.documentElement.addEventListener("mouseup", stopResize);
+    });
+  
+    function resizeElement(e) {
+      element.style.width = `${e.clientX - element.getBoundingClientRect().left}px`;
+      element.style.height = `${e.clientY - element.getBoundingClientRect().top}px`;
+    }
+  
+    function stopResize() {
+      document.documentElement.removeEventListener("mousemove", resizeElement);
+      document.documentElement.removeEventListener("mouseup", stopResize);
+    }
+  }
+function injectCSS(file) {
+  const link = document.createElement("link");
+  link.href = chrome.runtime.getURL(file);
+  link.type = "text/css";
+  link.rel = "stylesheet";
+  document.head.appendChild(link);
+}
