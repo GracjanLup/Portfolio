@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Analysis Options</title>
+    <style>
+      .selected-fallacies {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      .fallacy {
+        background-color: lightblue;
+        border-radius: 25px;
+        padding: 5px 10px;
+        margin: 0 5px 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="selected-fallacies"></div>
+    <form id="options-form">
+      <label for="formal-fallacies">Formal Fallacies:</label>
+      <select id="formal-fallacies" name="formal-fallacies">
+        <!-- Options will be populated dynamically -->
+      </select>
+      <br />
+      <label for="informal-fallacies">Informal Fallacies:</label>
+      <select id="informal-fallacies" name="informal-fallacies">
+        <!-- Options will be populated dynamically -->
+      </select>
+      <br />
+      <button type="button" id="analyze-btn">Analyze</button>
+    </form>
+    <script src="analysisOptions.js"></script>
+  </body>
+</html>
