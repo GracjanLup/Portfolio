@@ -5,7 +5,6 @@ import tkinter.font as font
 import time
 from PIL import ImageTk, Image
 
-# pip install Pillow
 
 def Czekaj1():
     info2.place_forget()

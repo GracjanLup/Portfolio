@@ -7,8 +7,6 @@ import random
 from PIL import Image, ImageTk, ImageFilter
 from functools import partial
 
-# Pamiętajcie o:
-# "pip install Pillow" w cmd'ku
 
 ##### Panel powitalny #####
 def welcome_panel():
@@ -309,7 +307,7 @@ def reset(event):
     # zbindowanie na prawym przycisku funkcji right_click
     event.widget.bind('<Button-3>', right_click)
 
-# Start panelu głównego - Emma:
+# Start panelu głównego:
 def gorny_start():
     global Try_number
     if Try_number == 1:
@@ -319,14 +317,14 @@ def gorny_start():
     panel_gorny=[zegar, licznik_min]
     return panel_gorny
 
-# Zegar - Emma:
+# Zegar:
 def aktualizacjaZegara(zegar):
     global Timer
     Timer+=1
     zegar["text"]="0"*(3-len(str(Timer)))+str(Timer)
     root.after(1000, aktualizacjaZegara, zegar)
 
-# Licznik min - Emma:
+# Licznik min:
 def aktualizacjaLicznikaMin(licznik_min, variable):
     global Mine_number
     # for mina in range (LICZBAMIN, -1):
@@ -340,11 +338,11 @@ def aktualizacjaLicznikaMin(licznik_min, variable):
         Mine_number += 1
         licznik_min["text"]=Mine_number
 
-# Powrót do uśmiechniętej - Emma
+# Powrót do uśmiechniętej:
 def aktualizujEmotke():
     emotikona.config(image=buzka1)
 
-# Kliknięcie buźki - Emma (i restart gry)
+# Kliknięcie buźki:
 def ClickEmotke():
     global Punkty, Defeat, Timer
     if level == "easy":

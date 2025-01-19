@@ -5,7 +5,6 @@ import tkinter.font as font
 import time
 from PIL import ImageTk, Image
 
-# pip install Pillow
 
 def start1():
     # TimerDown()
